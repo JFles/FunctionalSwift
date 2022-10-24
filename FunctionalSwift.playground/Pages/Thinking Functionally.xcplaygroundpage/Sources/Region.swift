@@ -6,7 +6,7 @@ struct Region {
 
 extension Region {
     /// Region for Battleship example is defined as a circle centered around origin (0, 0)
-    public func circle(radius: Distance) -> Region {
+    public static func circle(radius: Distance) -> Region {
         return Region(lookup: { point in point.length <= radius })
     }
     

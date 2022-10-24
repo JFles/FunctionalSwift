@@ -2,11 +2,12 @@ import Foundation
 
 //: ## Example: Battleship
 
-let ourShip = Ship(position: Position(x: 15, y: -7))
+let ourShip = Ship(position: Position(x: 0, y: 0))
 
-let targetShip = Ship(position: Position(x: 14, y: -8))
+let targetShip = Ship(position: Position(x: -10, y: -10))
+//let targetShip = Ship(position: Position(x: 0, y: 0))
 
-let friendlyShip = Ship(position: Position(x: 13, y: 2))
+let friendlyShip = Ship(position: Position(x: 10, y: 10))
+//let friendlyShip = Ship(position: Position(x: -10, y: -10))
 
 ourShip.canSafelyEngage_v4(ship: targetShip, friendly: friendlyShip)
-
