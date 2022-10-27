@@ -1,5 +1,5 @@
 import Foundation
-
+//: # Ch 1: Thinking Functionally
 //: ## Example: Battleship
 
 let ourShip = Ship(position: Position(x: 0, y: 0))

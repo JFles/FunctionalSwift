@@ -1,5 +1,7 @@
 import Foundation
-//: # Map, Filter, Reduce
+//: # Ch. 3: Map, Filter, Reduce
+//:
+//: ## Map
 //: Functions that take functions as arguments are usually referred to as `higher-order functions`. Swift defines a few of these in its standard library.
 //:
 //: As an imperative example that may be more familiar, we could write a solution to needing to increment each element of an array or doubling all its values with a `for` loop:
@@ -49,7 +51,7 @@ func compute(
     array: [Int],
     transform: (Int) -> Bool
 ) -> [Bool] {
-    var result = [Int]()
+    var result = [Bool]()
     for x in array {
         result.append(transform(x))
     }
@@ -60,7 +62,10 @@ func compute(
 /// Generic `compute(array:transform` which takes an [Int] and a transform of
 /// `(Int) -> T` and returns `[T]` where `T` is a generic type parameter
 /// specified by the calling function
-func genericCompute<T>(array: [Int], transform: (Int) -> T) -> [T] {
+func genericCompute<T>(
+    array: [Int],
+    transform: (Int) -> T
+) -> [T] {
     var result = [T]()
     for x in array {
         result.append(transform(x))
@@ -68,11 +73,14 @@ func genericCompute<T>(array: [Int], transform: (Int) -> T) -> [T] {
     return result
 }
 
-//: To take this further, there is no reason why we should limit our input to [Int], and we can solve this by adding another generic type parameter such as our `map(_:transform:)` below
+//: To take this further, there is no reason why we should limit our input to `[Int]`, and we can solve this by adding another generic type parameter such as our `map(_:transform:)` below
 
 /// Generic map that takes an array of any type and a transform with a potentially
 /// separate return type inferred by the passed in transform function
-func map<Element, T>(_ array: [Element], transform: (Element) -> T) -> [T] {
+func map<Element, T>(
+    _ array: [Element],
+    transform: (Element) -> T
+) -> [T] {
     var result = [T]()
     for x in array {
         result.append(transform(x))
@@ -80,7 +88,30 @@ func map<Element, T>(_ array: [Element], transform: (Element) -> T) -> [T] {
     return result
 }
 
+//: We can even define our prior `genericCompute(array:transform:)` function in terms of `map`!
+/// Transforming [Int] into [T]. Redefined with our `map<Element, T>` function
+func genericCompute2<T>(
+    _ array: [Int],
+    transform: (Int) -> T
+) -> [T] {
+    return map(array, transform: transform)
+}
 
+//: In order to fit more with Swift's style, we can define `map` as an extension of `Array`
+extension Array {
+    func map<T>(transform: (Element) -> T) -> [T] {
+        var result = [T]()
+        for x in self {
+            result.append(transform(x))
+        }
+        return result
+    }
+}
+
+//: Now we can call `array.map(transform:)` or `array.map { ... }`!
+func genericCompute3<T>(array: [Int], transform: (Int) -> T) -> [T] {
+    return array.map(transform)
+}
 
 
 

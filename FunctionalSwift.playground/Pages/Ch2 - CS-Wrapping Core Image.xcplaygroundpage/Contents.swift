@@ -1,5 +1,5 @@
 import UIKit
-//: # Case Study: Wrapping Core Image
+//: # Ch 2: Case Study: Wrapping Core Image
 //:
 //: One of the key classes in Core Image is CIFilter which is used to create image filters. When instantiating a CIFilter object, you generally need to:
 //: - Provide an input image via the `kCIinputImageKey`
