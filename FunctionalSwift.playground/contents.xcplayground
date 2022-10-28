@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<playground version='6.0' target-platform='ios' display-mode='raw' buildActiveScheme='true' importAppTypes='true'>
+<playground version='6.0' target-platform='ios' display-mode='rendered' buildActiveScheme='true' importAppTypes='true'>
     <pages>
         <page name='Ch1 - Thinking Functionally'/>
         <page name='Ch2 - CS-Wrapping Core Image'/>
         <page name='Ch3 - Map'/>
         <page name='Ch3 - Filter'/>
         <page name='Ch3 - Reduce'/>
+        <page name='Ch3 - Putting It All Together'/>
+        <page name='Ch3 - Generics vs. the Any Type'/>
     </pages>
 </playground>
