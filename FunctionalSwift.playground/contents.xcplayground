@@ -8,5 +8,6 @@
         <page name='Ch3 - Reduce'/>
         <page name='Ch3 - Putting It All Together'/>
         <page name='Ch3 - Generics vs. the Any Type'/>
+        <page name='Ch4 - Optionals'/>
     </pages>
 </playground>
