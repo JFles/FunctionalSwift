@@ -31,7 +31,7 @@ check("Additive identity") { (x: Int) in x + 0 == x }
 //:
 //: ### Generating Random Values
 //: First, let's define a protocol that knows how to generate arbitrary values. The `Arbitrary` protocol only contains one function, `arbitrary()` which returns `Self` (i.e. an instance of the class or struct that implements the `Arbitrary` protocol
-protocol Arbitrary {
+protocol Arbitrary_v1 {
     static func arbitrary() -> Self
 }
 //: The first type we can add support to return Arbitrary values from is `Int`. We'll constrain ourselves to an artificially small range to prevent integer overflows and have more readable output
@@ -44,6 +44,11 @@ extension Int: Arbitrary {
 Int.arbitrary()
 //: To generate random strings, we need to do a bit more work! To begin, we generate random Unicode scalars. Note that we'll only generate a small subset of Unicode as random characters to preserve readability for these examples
 extension UnicodeScalar: Arbitrary {
+    func smaller() -> Unicode.Scalar? {
+        // TODO: Can this be shrunk?
+        return nil
+    }
+    
     static func arbitrary() -> UnicodeScalar {
         return UnicodeScalar(Int.random(in: 48..<122))!
     }
@@ -81,12 +86,21 @@ extension CGSize {
 }
 
 extension Double: Arbitrary {
+    func smaller() -> Double? {
+        return self == 0 ? nil : self / 2
+    }
+    
     static func arbitrary() -> Double {
         return Double.random(in: -10_000...10_000)
     }
 }
 
 extension CGSize: Arbitrary {
+    func smaller() -> CGSize? {
+        // TODO: How do we want to shrink a `CGSize` object?
+        return nil
+    }
+    
     static func arbitrary() -> CGSize {
         return CGSize(width: .arbitrary(), height: .arbitrary())
     }
