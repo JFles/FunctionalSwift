@@ -125,5 +125,4 @@ func populationOfCapital3(country: String) -> Int? {
 
 //: The goal of this module isn't to argue that `flatMap` is the "right way" to combine optional values. Instead, the goal was to show that optional binding isn't magically built into the Swift compiler, and as a control structure, it an be implemented by us using higher-order functions
 
-
 //: [Previous](@previous)        [Next](@next)
