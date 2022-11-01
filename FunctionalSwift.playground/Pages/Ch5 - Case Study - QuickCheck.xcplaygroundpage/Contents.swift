@@ -170,4 +170,102 @@ func check2<A: Arbitrary>(_ message: String, _ property: (A) -> Bool) -> () {
     print("\"\(message)\" passed \(numberOfIterations) tests.")
 }
 
+//: ### Arbitrary Arrays
+//:
+//: Currently, `check2` only supports Int and String values. Extending it to other types such as Bool isn't hard, but things become significantly more complex when we want to generate arbitrary arrays. As a motivating example, we'll write a functional version of QuickSort
+extension Array where Element: Comparable {
+    func qsort() -> [Element] {
+        guard !isEmpty else { return [] }
+        var array = self
+        let pivot = array.removeFirst()
+        let lesser = array.filter { $0 < pivot }
+        let greater = array.filter { $0 >= pivot }
+        return lesser.qsort() + [pivot] + greater.qsort()
+    }
+}
+//: We can also try to write a property to check our version of QuickSort against the built-in sort function
+check2("qsort should behave like sort") { (x: [Int]) in
+    return x.qsort() == x.sorted()
+}
+//: The compiler warns us that `[Int]` must conform to `Arbitrary` first, and before we can implement `Arbitrary`, we'll need to implement `Smaller`. We can define `Smaller` for arrays to drop the last element of the array
+extension Array: Smaller {
+    func smaller() -> [Element]? {
+        guard !isEmpty else { return nil }
+        return Array(dropLast())
+    }
+}
+
+extension Array: Arbitrary where Element: Arbitrary {
+    static func arbitrary() -> [Element] {
+        let randomLength = Int.random(in: 0..<50)
+        return (0..<randomLength).map { _ in .arbitrary() }
+    }
+}
+
+//: ### Arbitrary Tuples
+//:
+//: For most generic types such as arrays and dictionaries, we can add conditional conformance to the `Arbitrary` protocol; however, it is currently not possible to conform tuple types to protocols.
+//:
+//: Let's consider our earlier example
+func plusIsCommutative2(x: Int, y: Int) -> Bool {
+    return x + y == y + x
+}
+//: The type of `plusIsCommutative` is `(Int, Int) -> Bool`. If we try to pass it to `check2`, the compiler will tell us that it must conform to `Arbitrary`. Again, this is currently impossible with tuple types. In order to accomodate this limitation, we can change the signature of `check` to allow us to pass in the `smaller` and `arbitrary` functions as arguments
+//:
+//: To start, we can define an auxillary struct which contains the two functions we need
+struct ArbitraryInstance<T> {
+    let arbitrary: () -> T
+    let smaller: (T) -> T?
+}
+//: We can now write a helper function that takes an `ArbitraryInstance` struct as an argument. The definition of `checkHelper` is very similar to our earlier `check2` function. The major change here are with how `arbitrary` and `smaller` are defined. While `check2` had these defined using a constraint on a generic type `<A: Arbitrary>`, `checkHelper` passes them explicitly in the `ArbitraryInstance` struct
+func checkHelper<A>(
+    _ arbitraryInstance: ArbitraryInstance<A>,
+    _ property: (A) -> Bool,
+    _ message: String
+) -> () {
+    let numberOfIterations = 10
+    for _ in 0..<numberOfIterations {
+        let value = arbitraryInstance.arbitrary()
+        guard property(value) else {
+            let smallerValue = iterate(
+                while: { !property($0) },
+                initial: value,
+                next: arbitraryInstance.smaller
+            )
+            return print("\"\(message)\" doesn't hold \(smallerValue)")
+        }
+    }
+    return print("\"\(message)\" passed \(numberOfIterations) tests.")
+}
+//: This is a standard technique. Instead of working with functions defined in protocols, we explicitly pass the information as an argument. This allows us to have more flexibility instead of being bound and limited to Swift's type inference behavior
+//:
+//: And now we can redefine our `check2` function to use the `checkHelper` function
+func check<X: Arbitrary>(
+    _ message: String,
+    property: (X) -> Bool
+) -> () {
+    let instance = ArbitraryInstance(
+        arbitrary: X.arbitrary,
+        smaller: { $0.smaller() }
+    )
+    checkHelper(instance, property, message)
+}
+//: If we have a type where we can's define the desired `Arbitrary` instance, such as with tuples, we can overload the `check` function and construct the desired `ArbitraryInstance` struct ourselves
+func check<X: Arbitrary, Y: Arbitrary>(
+    _ message: String,
+    _ property: (X, Y) -> Bool
+) -> () {
+    let arbitraryTuple = { (X.arbitrary(), Y.arbitrary()) }
+    let smaller: (X, Y) -> (X, Y)? = { (x, y) in
+        guard let newX = x.smaller(), let newY = y.smaller() else { return nil }
+        return (newX, newY)
+    }
+    let instance = ArbitraryInstance(arbitrary: arbitraryTuple, smaller: smaller)
+    checkHelper(instance, property, message)
+}
+// Now, we can finally verify our commutative property with random tuples being passed to our test
+check("Plus should be commutative", plusIsCommutative)
+
+
+
 //: [Previous](@previous)         [Next](@next)
