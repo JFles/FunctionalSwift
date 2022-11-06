@@ -73,6 +73,7 @@ extension Encoding {
 enum LookupError: Error {
     case capitalNotFound
     case populationNotFound
+    case mayorNotFound
 }
 
 enum PopulationResult {
@@ -105,7 +106,8 @@ func populationOfCapital(country: String) -> PopulationResult {
     return .success(population)
 }
 //: Callers of this function can use a switch statement to determine whether or not the function succeeded
-switch populationOfCapital(country: "France") {
+let result: PopulationResult = populationOfCapital(country: "France")
+switch result {
 case let .success(population):
     print("France's capital has a population of \(population) thousand inhabitants.")
 case let .failure(error):
@@ -130,7 +132,7 @@ func mayorOfCapital(country: String) -> String? {
 //:
 //: A similar enum to `PopulationResult` would be a good choice here
 enum MayorResult {
-    case success(string)
+    case success(String)
     case failure(Error)
 }
 //: But we should see now that the key differences in these enums are the associated values, so we can make a generic `Result` type to cover both enums and future related enums
@@ -139,8 +141,24 @@ enum Result<T, E: Error> {
     case failure(E)
 }
 //: And now we can use our generic `Result` type for both of our functions!
-func populationOfCapital(country: String) -> Result<Int, LookupError> { }
-func mayorOfCapital(country: String) -> Result<String, Error> { }
+func populationOfCapital(country: String) -> Result<Int, LookupError> {
+    guard let capital = capitals[country] else {
+        return .failure(.capitalNotFound)
+    }
+    guard let population = cities[capital] else {
+        return .failure(.populationNotFound)
+    }
+    return .success(population)
+}
+func mayorOfCapital(country: String) -> Result<String, LookupError> {
+    guard let capital = capitals[country] else {
+        return .failure(.capitalNotFound)
+    }
+    guard let mayor = mayors[capital] else {
+        return .failure(.mayorNotFound)
+    }
+    return .success(mayor)
+}
 
 //: ## Swift Errors
 //:
@@ -151,7 +169,7 @@ func mayorOfCapital(country: String) -> Result<String, Error> { }
 //: Semantically, the `Result` type is generic over a second error type, so we can be more specific such as with `LookupError`. Swift's built-in error handling is not as precise and only guarantees that an error conforms to the `Error` protocol.
 //:
 //: Below is a rewrite of our `populationOfCapital` function using Swift's errors
-func populationOfCapital(country: String) throws -> Int {
+func tryPopulationOfCapital(country: String) throws -> Int {
     guard let capital = capitals[country] else {
         throw LookupError.capitalNotFound
     }
@@ -162,13 +180,60 @@ func populationOfCapital(country: String) throws -> Int {
 }
 //: And to call our function, we can wrap it in a `do-catch` block with a `try` prefix
 do {
-    let population = populationOfCapital(country: "France")
+    let population = try tryPopulationOfCapital(country: "France")
     print("France's population is \(population)")
 } catch {
     print("Lookup error: \(error)") // 😟 We don't know the exact Error type here -- unlike `Result<T, E>`
 }
+//: ## Optionals Revisited
+//:
+//: Something to consider is that Swift's `Optional` type is very similar to the `Result` type
+enum Optional<Wrapped> {
+    case none
+    case some(Wrapped)
+    //...
+}
+//: The Optional type mostly provides syntactic sugar in the form of the `?` postfix notation and optional unwrapping mechanism for easier use, but there's no reason why we couldn't define it ourselves.
+//:
+//: In fact, we can define some of the library functions for manipulating optionals on our own Result type!
+//:
+//: As an example, we can redefine the `??` operator to work on our `Result` type
+infix operator ??
 
+func ??<T, E>(
+    result: Result<T, E>,
+    handleError: (E) -> T
+) -> T {
+    switch result {
+    case let .success(value):
+        return value
+    case let .failure(error):
+        return handleError(error)
+    }
+}
 
+//: The book doesn't provide an example of using the `??` `Result` operator, so I've cooked up the following
+func populationOfCapital(country: String) -> Int {
+    guard let capital = capitals[country] else {
+        return .failure(LookupError.capitalNotFound) ?? lookupErrorHandler()
+    }
+    guard let population = cities[capital] else {
+        return .failure(LookupError.populationNotFound) ?? lookupErrorHandler()
+    }
+    return population
+}
+
+func lookupErrorHandler() -> (LookupError) -> Int {
+    return { error in
+        print("Lookup Error: \(error)")
+        return -1
+    }
+}
+
+let failingPopulation: Int = populationOfCapital(country: "Beepo")
+print(failingPopulation)
+
+//: ## The Algebra of Data Types
 
 
 
