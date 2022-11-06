@@ -233,8 +233,5 @@ func lookupErrorHandler() -> (LookupError) -> Int {
 let failingPopulation: Int = populationOfCapital(country: "Beepo")
 print(failingPopulation)
 
-//: ## The Algebra of Data Types
-
-
 
 //: [Previous](@previous)        [Next](@next)
