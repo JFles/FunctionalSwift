@@ -12,5 +12,6 @@
         <page name='Ch4 - Working with Optionals'/>
         <page name='Ch5 - Case Study - QuickCheck'/>
         <page name='Ch7 - Enumerations'/>
+        <page name='Ch8 - Purely Functional Data Structures'/>
     </pages>
 </playground>
