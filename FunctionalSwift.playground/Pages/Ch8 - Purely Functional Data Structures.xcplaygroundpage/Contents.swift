@@ -3,7 +3,7 @@ import Foundation
 //: # Ch 8: Purely Functional Data Structures
 //:
 //: In the prior chapter, we showed how enumerations can be used to define specific types for the applications we develop. For this chapter, we'll define recursive enumerations and show how they can be used to define data structures that are both efficient and persistent
-
+//:
 //: ## Binary Search Trees
 //:
 //: For this example, we'll build a limited `Set` type to demonstrate how recursive enumerations can be used to define efficient data structures.
@@ -33,6 +33,9 @@ struct MySet<Element: Equatable> {
 //: While simple, the drawback with this implementation is that many of the operations will perform linearly for the size of the set. This may cause performance problems with larger sets.
 //:
 //: There are several ways we can address the performance bottleneck and improve beyond `O(n)`. For this module, we'll define a `binary search tree` to represent our sets, and we'll define our trees directly as an enumeration in Swift using the `indirect` keyword.
+/// A recursive Enumeration implementation of a Binary Search Tree
+///
+/// Reference: [Swift Enumeration Declaration](https://docs.swift.org/swift-book/ReferenceManual/Declarations.html#ID364)
 indirect enum BinarySearchTree<Element: Comparable> {
     case leaf
     case node(
@@ -80,9 +83,43 @@ extension BinarySearchTree {
         }
     }
 }
-
-
-
+//: Because the `count` and `elements` properties we've defined on our `BinarySearchTree` are very similar, we can define an abstraction sometimes known as a `fold` or `reduce`
+extension BinarySearchTree {
+    func reduce<A>(
+        leaf leafF: A,
+        node nodeF: (A, Element, A) -> A
+    ) -> A {
+        switch self {
+        case .leaf:
+            return leafF
+        case let .node(left, x, right):
+            return nodeF(
+                left.reduce(leaf: leafF, node: nodeF),
+                x,
+                right.reduce(leaf: leafF, node: nodeF)
+            )
+        }
+    }
+}
+//: This enables us to rewrite `elements` and `fold` with very little code
+extension BinarySearchTree {
+    var elementsR: [Element] {
+        return reduce(leaf: []) { $0 + [$1] + $2 }
+    }
+    
+    var countR: Int {
+        return reduce(leaf: 0) { 1 + $0 + $2 }
+    }
+}
+//: Now, lets return to our original goal of writing an efficient `set` library using trees
+extension BinarySearchTree {
+    var isEmpty: Bool {
+        if case .leaf = self {
+            return true
+        }
+        return false
+    }
+}
 
 
 
