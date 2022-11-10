@@ -111,7 +111,7 @@ extension BinarySearchTree {
         return reduce(leaf: 0) { 1 + $0 + $2 }
     }
 }
-//: Now, lets return to our original goal of writing an efficient `set` library using trees
+//: Now, lets return to our original goal of writing an efficient `set` library using trees. The case for `isEmpty` is very simple since we know that a BST is empty if it only contains a leaf and no nodes.
 extension BinarySearchTree {
     var isEmpty: Bool {
         if case .leaf = self {
@@ -120,6 +120,51 @@ extension BinarySearchTree {
         return false
     }
 }
+//: Since our example BST in this chapter is implemented in a way where we can construct an invalid tree, we can verify its validity through the following admittedly inefficient recursive check
+extension BinarySearchTree {
+    var isBST: Bool {
+        switch self {
+        case .leaf:
+            return true
+        case let .node(left, x, right):
+            return left.elements.allSatisfy { y in y < x }
+                && right.elements.allSatisfy { y in y > x }
+                && left.isBST
+                && right.isBST
+        }
+    }
+}
+//: The goal of BST is for efficint lookup operations where we only have to consider half of the tree after every evaluation. We can implement that roughly with the following extension.
+extension BinarySearchTree {
+    func contains(_ x: Element) -> Bool {
+        switch self {
+        case .leaf:
+            return false
+        case let .node(_, y, _) where x == y:
+            return true
+        case let .node(left, y, _) where x < y:
+            return left.contains(x)
+        case let .node(_, y, right) where x < y:
+            return right.contains(x)
+        default:
+            fatalError("The impossible has happened")
+        }
+    }
+}
+//: And in a similar way, insertion searches through the BST recursively.
+extension BinarySearchTree {
+    mutating func insert(_ x: Element) {
+        switch self {
+        case .leaf:
+            self = BinarySearchTree(x)
+        case.node(var left, let y, var right):
+            if x < y { left.insert(x) }
+            if x > y { right.insert(x) }
+            self = .node(left, y, right)
+        }
+    }
+}
+
 
 
 
