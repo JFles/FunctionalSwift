@@ -165,8 +165,45 @@ extension BinarySearchTree {
     }
 }
 
-
-
-
+//: ## Autocompletion using tries
+//:
+//: For this last section, we'll cover a more advanced and purely functional data structure known as a `Trie` or `Digitial search tree` which are a kind of ordered tree typically used to look up strings as each consitient node consistents of each of the following characters in the string.
+//:
+//: We'll use a Trie to write an example autocompletion algorithm. We could use arrays to accomplish this, but it would be highly inefficient for large histories and long prefixes.
+extension String {
+    /// An inefficient but simple array implementation of an autocomplete history feature
+    func complete(history: [String]) -> [String] {
+        return history.filter { $0.hasPrefix(self) }
+    }
+}
+//: Our earlier example of a Binary Search Tree had exactly two subtrees at each node while Tries potentially have subtrees for each possible character.
+//:
+//: As a first attempt to represent such a Trie in Swift, we can write a struct storing a dictionary and mapping characters to subtries at every node
+struct Trie_v1 {
+    let children: [Character: Trie_v1]
+}
+//: To improve on this, we need to track between prefixes which are or are not in the trie, and we'll define a generic trie that's not restricted to only storing characters
+struct Trie<Element: Hashable> {
+    let isElement: Bool
+    let children: [Element: Trie<Element>]
+}
+//: Before defining our autocompletion functions on tries, we can write a few simple definitions such as an empty trie consists of a node with an empty dictionary
+extension Trie {
+    /// If we set `isElement` to `true` for an empty trie, then we are stating that an empty string is part of our trie, and this is likely not the behavior we want!
+    init() {
+        isElement = false
+        children = [:]
+    }
+}
+//: Next, we'll define a property to flatten a trie into an array containing all of its elements
+extension Trie {
+    var elements: [[Element]] {
+        var result: [[Element]] = isElement ? [[]] : []
+        for (key, value) in children {
+            result += value.elements.map { [key] + $0 }
+        }
+        return result
+    }
+}
 
 //: [Previous](@previous)         [Next](@next)
