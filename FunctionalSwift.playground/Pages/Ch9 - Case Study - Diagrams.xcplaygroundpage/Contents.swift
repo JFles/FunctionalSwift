@@ -64,13 +64,13 @@ renderer.image { context in
 //: - rectangles
 //: - text
 //:
-//: We can define a data type for these with an enum
+//: We can define a data type for these primitive with an enum
 enum Primitive {
     case ellipse
     case rectangle
     case text(String)
 }
-//: Similarly, we can define `Diagrams` using an enum as well
+//: Similarly, we can define `Diagrams` using an enum as well, though we'll use the `indirect` keyword to specify that it is a recursive enumeration
 indirect enum Diagram {
     /// A diagram which is a Primitive of the specified `size`
     case primitive(CGSize, Primitive)
@@ -80,7 +80,7 @@ indirect enum Diagram {
     case below(Diagram, Diagram)
     /// An attributed diagram to allow a styled diagram
     case attributed(Attribute, Diagram)
-    /// Specify alignment for a specified diagram
+    /// Specify alignment for a diagram
     case align(CGPoint, Diagram)
 }
 //: Our `Attribute` enum is a data type for describing different attributes of diagrams. Currently, it only supports `fillColor`, but it could easily be extended to support additional attributes such as stroking, gradients, text attributes, etc.
@@ -90,19 +90,21 @@ enum Attribute {
 
 //: ## Calculating and Drawing
 //:
-//: Calculating the size for the Diagram data type is generally easy. The only cases that aren't straightforward are `beside` and `below`.
+//: Calculating the `size` for the Diagram data type is generally easy. The only cases that aren't straightforward are `beside` and `below`.
 //:
 //: For `beside`:
 //: - width equals the sum of widths
 //: - height equals max height of the left and right diagram
 //:
-//: For `below`, it's a similar patterm. All other cases, we call size recursively
+//: For `below`, it's a similar pattern.
+//:
+//: And for all other cases, we call size recursively
 extension Diagram {
     var size: CGSize {
         switch self {
-        case .primitive(let size, _):
+        case let .primitive(size, _):
             return size
-        case .attributed(_, let diagram):
+        case let .attributed(_, diagram):
             return diagram.size
         case let .beside(leftDiagram, rightDiagram):
             return CGSize(
@@ -114,7 +116,7 @@ extension Diagram {
                 width: max(leftDiagram.size.width, rightDiagram.size.width),
                 height: leftDiagram.size.height + rightDiagram.size.height
             )
-        case .align(_, let diagram):
+        case let .align(_, diagram):
             return diagram.size
         }
     }
@@ -139,26 +141,48 @@ extension CGSize {
     }
 }
 //: In order to be able to write the calculations in the `fit(into:alignment:)` method above in an expressive way, we'll define the following operations and helper functions `CGSize` and `CGPoint`
+/// Infix Operator overload to multiply a `CGFloat` and a `CGSize`
+/// - Parameters:
+///   - lhs: CGFloat
+///   - rhs: CGSize
+/// - Returns: CGize
 func *(lhs: CGFloat, rhs: CGSize) -> CGSize {
     return CGSize(width: lhs * rhs.width, height: lhs * rhs.height)
 }
 
+/// Infix Operator overload to multiply a `CGSize` and a `CGSize`
+/// - Parameters:
+///   - lhs: CGSize
+///   - rhs: CGSize
+/// - Returns: CGSize
 func *(lhs: CGSize, rhs: CGSize) -> CGSize {
     return CGSize(width: lhs.width * rhs.width, height: lhs.height * rhs.height)
 }
 
+/// Infix Operator overload to subtract a `CGSize` from a `CGSize`
+/// - Parameters:
+///   - lhs: CGSize
+///   - rhs: CGSize
+/// - Returns: CGSize
 func -(lhs: CGSize, rhs: CGSize) -> CGSize {
     return CGSize(width: lhs.width - rhs.width, height: lhs.height - rhs.height)
 }
 
+/// Infix Operator overload to add a `CGPoint` to a `CGPoint`
+/// - Parameters:
+///   - lhs: CGPoint
+///   - rhs: CGPoint
+/// - Returns: CGPoint
 func +(lhs: CGPoint, rhs: CGPoint) -> CGPoint {
     return CGPoint(x: lhs.x + rhs.x, y: lhs.y + rhs.y)
 }
 
+/// Define a `CGPoint` for a `CGSize` based on its width and height values
 extension CGSize {
     var point: CGPoint { return CGPoint(x: width, y: height) }
 }
 
+/// Define a `CGSize` for a `CGPoint` based on its x and y values
 extension CGPoint {
     var size: CGSize { return CGSize(width: x, height: y) }
 }
